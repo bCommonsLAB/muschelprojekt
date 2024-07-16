@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Transkription</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <header>
+        <h1>Audio Transkription</h1>
+    </header>
+    <div class="container">
+        <div id="drop-area" onclick="document.getElementById('fileElem').click()">
+            <p>Ziehen Sie Ihre Audiodatei hierher oder klicken Sie, um eine Datei auszuwählen</p>
+            <input type="file" id="fileElem" accept="audio/*" onchange="handleFiles(this.files)">
+        </div>
+        <div id="uploaded-audio" style="display: none;">
+            <audio id="audio-player" controls></audio>
+        </div>
+        <div id="transcription-output" class="result"></div>
+        <div id="markdown-viewer" class="result"></div>
+        <button id="download-btn" style="display: none;" onclick="downloadMarkdown()">Markdown herunterladen</button>
+    </div>
+    <div id="loading-overlay" style="display: none;">
+        <div id="loading-indicator">
+            <p>Die Datei wird hochgeladen und transkribiert...</p>
+            <div class="spinner"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
