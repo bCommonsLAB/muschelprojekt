@@ -74,7 +74,7 @@ Der transkribierte Text wird analysiert und in ein strukturiertes JSON-Format um
 
 
 
-##Fehlerbehandlung
+### Fehlerbehandlung
 - Kein Audiodatei hochgeladen: "error": "No audio file provided"
 - Nicht unterstütztes Format: "error": "Unsupported file format"
 - Fehler bei der Transkription: "error": "Transcription error"
