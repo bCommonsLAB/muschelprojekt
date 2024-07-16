@@ -1,6 +1,7 @@
 # Audio Transkription
 
-![image](https://github.com/user-attachments/assets/4c54ac77-78b7-41b0-8603-8558ed5ae544)
+![image](https://github.com/user-attachments/assets/7891002e-f2fe-4ac0-af7e-ec8b2f3853c8)
+
 
 ## Überblick
 Diese Anwendung ermöglicht das Hochladen und Transkribieren von Audiodateien. Die Transkription wird in ein Markdown-Format umgewandelt, das heruntergeladen werden kann.
