@@ -15,7 +15,7 @@ Diese Anwendung ermöglicht das Hochladen und Transkribieren von Audiodateien. D
 
 1. **Repository klonen**:
     ```bash
-    [git clone https://github.com/username/repository.git](https://github.com/bCommonsLAB/muschelprojekt.git)
+    [git clone https://github.com/bCommonsLAB/muschelprojekt.git
     cd muschelprojekt/local
     ```
 
