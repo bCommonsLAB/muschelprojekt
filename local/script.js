@@ -7,6 +7,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const markdownOutput = document.getElementById('markdown-viewer');
     const loadingOverlay = document.getElementById('loading-overlay');
     const downloadBtn = document.getElementById('download-btn');
+    const templateSelect = document.getElementById('template-select');
+
+    function loadTemplates() {
+        fetch('http://127.0.0.1:5000/templates')
+            .then(response => response.json())
+            .then(data => {
+                data.templates.forEach(template => {
+                    const option = document.createElement('option');
+                    option.value = template;
+                    option.textContent = template;
+                    templateSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error loading templates:', error));
+    }
 
     function handleFiles(files) {
         const file = files[0];
@@ -19,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function handleAudioFile(file) {
         const formData = new FormData();
         formData.append('audio', file);
+        formData.append('template', templateSelect.value);
 
         document.body.classList.add('loading');
         loadingOverlay.style.display = 'flex';
@@ -43,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 transcriptionOutput.innerText = 'Fehler bei der Transkription: ' + data.error;
             } else {
                 transcriptionOutput.innerText = 'Transkription erfolgreich';
-                displayMarkdown(data.markdown_data);
+                displayMarkdown(data.filled_template);
                 downloadBtn.style.display = 'block';
             }
         })
@@ -105,4 +121,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     window.downloadMarkdown = downloadMarkdown;
+    loadTemplates();
 });

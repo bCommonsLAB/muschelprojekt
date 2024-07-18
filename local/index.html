@@ -15,6 +15,12 @@
             <p>Ziehen Sie Ihre Audiodatei hierher oder klicken Sie, um eine Datei auszuwählen</p>
             <input type="file" id="fileElem" accept="audio/*" onchange="handleFiles(this.files)">
         </div>
+        <div>
+            <label for="template-select">Wählen Sie ein Template:</label>
+            <select id="template-select">
+                <option value="">--Bitte wählen--</option>
+            </select>
+        </div>
         <div id="uploaded-audio" style="display: none;">
             <audio id="audio-player" controls></audio>
         </div>

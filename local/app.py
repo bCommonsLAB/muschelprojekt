@@ -8,15 +8,32 @@ import json
 app = Flask(__name__)
 CORS(app)
 
-openai.api_key = 'Your-Open-AI-Key'  # Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
+openai.api_key = 'your-open-ai-key'  # Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
 
+TEMPLATE_DIR = '..\mktemplates'  # Verzeichnis für die Templates
 SUPPORTED_FORMATS = ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']
+
+@app.route('/templates', methods=['GET'])
+def list_templates():
+    templates = [f for f in os.listdir(TEMPLATE_DIR) if f.endswith('.md')]
+    return jsonify({'templates': templates})
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe_audio():
     if 'audio' not in request.files:
         app.logger.error('No audio file provided')
         return jsonify({'error': 'No audio file provided'}), 400
+
+    if 'template' not in request.form:
+        app.logger.error('No template selected')
+        return jsonify({'error': 'No template selected'}), 400
+
+    template_name = request.form['template']
+    template_path = os.path.join(TEMPLATE_DIR, template_name)
+
+    if not os.path.isfile(template_path):
+        app.logger.error('Template not found: %s', template_name)
+        return jsonify({'error': 'Template not found'}), 400
 
     audio_file = request.files['audio']
     file_ext = audio_file.filename.split('.')[-1].lower()
@@ -45,27 +62,10 @@ def transcribe_audio():
 
         text = response['text']
 
-        prompt = f"""
-Hier ist der transkribierte Text:
+        with open(template_path, 'r') as template_file:
+            template_content = template_file.read()
 
-{text}
-
-Analysiere den Text und fülle die folgenden Felder entsprechend aus. Wenn eine Information nicht vorhanden ist, setze sie auf "nicht gegeben". Gib das Ergebnis als gültiges JSON zurück.
-
-{{
-"Titel": "{{{{title}}}}",
-"Autor": "{{{{author}}}}",
-"Veröffentlichungsdatum": "{{{{date}}}}",
-"Genre": "{{{{genre}}}}",
-"ISBN": "{{{{isbn}}}}",
-"Tags": "{{{{tags}}}}",
-"Zusammenfassung": "{{{{summary}}}}",
-"Persönliche Bedeutung": "{{{{personal_impact}}}}",
-"Wichtige Zitate": ["{{{{quote1}}}}", "{{{{quote2}}}}", "{{{{quote3}}}}"],
-"Notizen": ["{{{{note1}}}}", "{{{{note2}}}}", "{{{{note3}}}}"]
-}}
-"""
-
+        prompt = f"bitte schaue dir dieses template an: {template_content} jetzt ersetze die ganzen gefragten daten mithilfe dieser angegebenen daten: {text}"
 
         gpt_response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -79,20 +79,9 @@ Analysiere den Text und fülle die folgenden Felder entsprechend aus. Wenn eine 
             app.logger.error('No choices in response from GPT-3.5 Turbo API')
             return jsonify({'error': 'No choices in response from GPT-3.5 Turbo API'}), 500
 
-        gpt_text = gpt_response['choices'][0]['message']['content']
+        filled_template = gpt_response['choices'][0]['message']['content']
         
-        try:
-            gpt_text = gpt_text.strip().replace('json:', '').strip()
-            json_response = json.loads(gpt_text)
-        except (json.JSONDecodeError, ValueError) as e:
-            app.logger.error('Error decoding JSON: %s', str(e))
-            app.logger.error('GPT-3.5 Turbo response: %s', gpt_text)
-            return jsonify({'error': 'Error decoding JSON from GPT-3.5 Turbo response'}), 500
-
-        # Convert JSON response to Markdown
-        markdown_content = convert_to_markdown(json_response)
-        
-        return jsonify({"markdown_data": markdown_content})
+        return jsonify({"filled_template": filled_template})
 
     except openai.error.OpenAIError as e:
         app.logger.error('OpenAI error: %s', str(e))
@@ -100,23 +89,6 @@ Analysiere den Text und fülle die folgenden Felder entsprechend aus. Wenn eine 
     except Exception as e:
         app.logger.error('Unexpected error: %s', str(e))
         return jsonify({'error': 'An unexpected error occurred: ' + str(e)}), 500
-
-def convert_to_markdown(data):
-    markdown = f"# {data.get('Titel', 'Titel nicht gegeben')}\n\n"
-    markdown += f"**Autor:** {data.get('Autor', 'Nicht gegeben')}\n\n"
-    markdown += f"**Veröffentlichungsdatum:** {data.get('Veröffentlichungsdatum', 'Nicht gegeben')}\n\n"
-    markdown += f"**Genre:** {data.get('Genre', 'Nicht gegeben')}\n\n"
-    markdown += f"**ISBN:** {data.get('ISBN', 'Nicht gegeben')}\n\n"
-    markdown += f"**Tags:** {data.get('Tags', 'Nicht gegeben')}\n\n"
-    markdown += f"## Zusammenfassung\n\n{data.get('Zusammenfassung', 'Nicht gegeben')}\n\n"
-    markdown += f"## Persönliche Bedeutung\n\n{data.get('Persönliche Bedeutung', 'Nicht gegeben')}\n\n"
-    markdown += "## Wichtige Zitate\n\n"
-    for quote in data.get('Wichtige Zitate', []):
-        markdown += f"- {quote}\n"
-    markdown += "\n## Notizen\n\n"
-    for note in data.get('Notizen', []):
-        markdown += f"- {note}\n"
-    return markdown
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
